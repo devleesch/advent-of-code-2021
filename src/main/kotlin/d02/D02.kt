@@ -3,7 +3,6 @@ package d02
 import readLines
 
 fun main() {
-
     val lines = readLines("src/main/resources/d02/input.txt", String::class)
 
     println(part1(lines))
