@@ -1,32 +1,32 @@
 package d01
 
-import java.io.File
+import readLines
 
 fun main() {
-    val lines = File("src/main/resources/d01/input.txt").readLines()
+    val lines = readLines("src/main/resources/d01/input.txt", Long::class)
 
     println(part1(lines))
     println(part2(lines))
 }
 
-fun part1(lines: List<String>): String {
-    var count = 0
-    var previous: Int? = null
-    var current: Int
+fun part1(lines: List<Long>): Long {
+    var count: Long = 0
+    var previous: Long? = null
+    var current: Long
 
     for (l in lines) {
-        current = l.toInt()
-        if (previous != null && current > previous) {
+        current = l
+        if ((previous != null) && (current > previous)) {
             count++
         }
-        previous = l.toInt()
+        previous = l
     }
 
-    return count.toString()
+    return count
 }
 
-fun part2(lines: List<String>): String {
-    var count = 0
+fun part2(lines: List<Long>): Long {
+    var count: Long = 0
 
     var i = 0
     while (i < lines.size - 3) {
@@ -38,13 +38,13 @@ fun part2(lines: List<String>): String {
         i++
     }
 
-    return count.toString()
+    return count
 }
 
-fun sum(lines: List<String>): Int {
-    var sum = 0
+fun sum(lines: List<Long>): Long {
+    var sum: Long = 0
     for (l in lines) {
-        sum += l.toInt()
+        sum += l
     }
     return sum
 }
