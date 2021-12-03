@@ -3,10 +3,13 @@ package d01
 import readLines
 
 fun main() {
+    println("== Day 01 ==")
     val lines = readLines("src/main/resources/d01/input.txt", Long::class)
 
-    println(part1(lines))
-    println(part2(lines))
+    println("part 1: " + part1(lines))
+    println("part 2: " + part2(lines))
+
+    println("============")
 }
 
 fun part1(lines: List<Long>): Long {
