@@ -49,10 +49,6 @@ fun part2(lines: List<String>): Any? {
 }
 
 fun fuel(move: Int): Int {
-    var fuel = 0
-    for (i in 0..move) {
-        fuel += i
-    }
-    return fuel
+    return move * (move + 1) / 2
 }
 
