@@ -53,14 +53,11 @@ fun decode(line: String): Int {
     founds[6] = patterns.subtract(founds.values.toSet()).first { it.subtract(founds[5]!!).size == 1 }
     founds[0] = patterns.subtract(founds.values.toSet()).first()
 
-    val converter = mutableMapOf<Set<Char>, Int>()
-    for (found in founds) {
-        converter[found.value.toSortedSet()] = found.key
-    }
-
     var result = ""
     for (digit in digits) {
-        result += converter[digit.toSortedSet()]
+        result += founds.filter { it.value.toSortedSet() == digit.toSortedSet() }
+            .keys
+            .first()
     }
 
     return result.toInt()
