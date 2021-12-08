@@ -28,25 +28,11 @@ fun part1(lines: List<String>): Any? {
 }
 
 fun part2(lines: List<String>): Any? {
-
-    val models = mapOf(
-        0 to "1110111",
-        1 to "0010010",
-        2 to "1011101",
-        3 to "1011011",
-        4 to "0111010",
-        5 to "1101011",
-        6 to "1101111",
-        7 to "1010010",
-        8 to "1111111",
-        9 to "1111011"
-    )
-
-    return lines.map { line -> decode(line, models) }
+    return lines.map { line -> decode(line) }
                 .sum()
 }
 
-fun decode(line: String, models: Map<Int, String>): Int {
+fun decode(line: String): Int {
     val split = line.split(" | ")
     val patterns = split[0].split(' ')
         .map { it.toSet() }
