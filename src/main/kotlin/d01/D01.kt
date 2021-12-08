@@ -33,8 +33,8 @@ fun part2(lines: List<Long>): Long {
 
     var i = 0
     while (i < lines.size - 3) {
-        val sumA = sum(lines.subList(i, i+3))
-        val sumB = sum(lines.subList(i+1, i+1+3))
+        val sumA = lines.subList(i, i+3).sum()
+        val sumB = lines.subList(i+1, i+1+3).sum()
         if (sumB > sumA) {
             count++
         }
@@ -42,12 +42,4 @@ fun part2(lines: List<Long>): Long {
     }
 
     return count
-}
-
-fun sum(lines: List<Long>): Long {
-    var sum: Long = 0
-    for (l in lines) {
-        sum += l
-    }
-    return sum
 }
