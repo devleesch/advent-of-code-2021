@@ -46,15 +46,7 @@ fun decode(line: String): Int {
         8 to patterns.filter { it.size == 7 }[0]
     )
 
-    val possibilities = mutableMapOf<Int, Char>()
-    for (i in 0 until 7) {
-        possibilities[i] = ' '
-    }
-
-    possibilities[0] = founds[7]!!.subtract(founds[1]!!).first()
     founds[9] = patterns.filter { it.size == 6 }.first { it.subtract(founds[4]!!).size == 2 }
-    possibilities[4] = founds[8]!!.subtract(founds[9]!!).first()
-    possibilities[6] = founds[9]!!.subtract(founds[7]!!).subtract(founds[4]!!).first()
     founds[2] = patterns.filter { it.size == 5 }.first { it.subtract(founds[4]!!).size == 3 }
     founds[3] = patterns.filter { it.size == 5 }.first { it.subtract(founds[2]!!).size == 1 }
     founds[5] = patterns.filter { it.size == 5 }.first { it.subtract(founds[2]!!).size == 2 }
