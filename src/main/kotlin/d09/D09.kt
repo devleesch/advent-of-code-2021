@@ -3,7 +3,7 @@ package d09
 import readLines
 
 fun main() {
-    println("== Day 08 ==")
+    println("== Day 09 ==")
     val lines = readLines("src/main/resources/d09/input.txt", String::class)
 
     println("part 1: " + part1(lines))
