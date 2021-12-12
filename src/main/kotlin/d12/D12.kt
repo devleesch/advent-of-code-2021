@@ -80,7 +80,7 @@ fun part2(lines: List<String>): Any? {
         for (path in paths) {
             if (path.last() != caves["end"]) {
                 val minus = path.filter { it.name[0].isLowerCase() }
-                    .filter { hadTwiceSmallCave(path) }
+                    .filter { hasTwiceSmallCave(path) }
                     .toMutableSet()
                 minus.add(caves["start"]!!)
 
@@ -101,9 +101,9 @@ fun part2(lines: List<String>): Any? {
     return complete.size
 }
 
-fun hadTwiceSmallCave(path: MutableList<Cave>): Boolean {
+fun hasTwiceSmallCave(path: MutableList<Cave>): Boolean {
     return path.filter { it.name[0].isLowerCase() }
-        .maxOf { path.count { cave -> cave == it } } > 2
+        .maxOf { path.count { cave -> cave == it } } >= 2
 }
 
 class Cave(val name: String) {
