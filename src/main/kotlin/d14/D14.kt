@@ -14,22 +14,13 @@ fun main() {
 }
 
 fun part1(lines: List<String>): Any? {
-    return process(lines, 10)
-}
-
-fun part2(lines: List<String>): Any? {
-    return process(lines, 40)
-}
-
-fun process(lines: List<String>, steps: Int): Any? {
     var template = lines[0]
     var insertion = lines.subList(2, lines.size).associate {
         val split = it.split(" -> ")
         split[0] to split[1]
     }
 
-    for (step in 0 until steps) {
-        println("step: $step -> ${template.length}")
+    for (step in 0 until 10) {
         var newTemplate = template[0].toString()
         while (template.isNotEmpty()) {
             val take = template.take(2)
@@ -49,4 +40,38 @@ fun process(lines: List<String>, steps: Int): Any? {
     }
 
     return counts.values.maxOf { it } - counts.values.minOf { it }
+}
+
+fun part2(lines: List<String>): Any? {
+    val template = lines[0]
+    val converters = lines.subList(2, lines.size).associate {
+        val split = it.split(" -> ")
+        split[0] to split[1][0]
+    }
+
+    val counts = mutableMapOf<Char, Long>(
+        template.first() to 1,
+        template.last() to 1
+    )
+    template.windowed(2)
+        .forEach { expand(it, 40, converters, counts) }
+
+    return counts.values.maxOf { it } - counts.values.minOf { it }
+}
+
+fun expand(source: String, step: Int, converters: Map<String, Char>, counts: MutableMap<Char, Long>) {
+
+    val inserted = converters[source]!!
+
+    counts.putIfAbsent(inserted, 0)
+    counts.computeIfPresent(inserted) { _, c -> c + 1 }
+
+    val next = step - 1
+    if (next > 0) {
+        val left = source[0].toString() + inserted
+        expand(left, next, converters, counts)
+
+        val right = inserted + source[1].toString()
+        expand(right, next, converters, counts)
+    }
 }
