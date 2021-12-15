@@ -5,7 +5,7 @@ import readLines
 fun main() {
     val day = "14"
     println("== Day $day ==")
-    val lines = readLines("src/main/resources/d$day/test.txt", String::class)
+    val lines = readLines("src/main/resources/d$day/input.txt", String::class)
 
     println("part 1: " + part1(lines))
     println("part 2: " + part2(lines))
@@ -47,19 +47,31 @@ fun part2(lines: List<String>): Any? {
     val converters = lines.subList(2, lines.size).associate {
         val split = it.split(" -> ")
         split[0] to split[1][0]
-    }
+    }.toMutableMap()
 
-    val counts = mutableMapOf<Char, Long>(
+    var counts = mutableMapOf<Char, Long>(
         template.first() to 1,
         template.last() to 1
     )
-    template.windowed(2)
-        .forEach { expand(it, 40, converters, counts) }
+
+    var shortcuts = mutableMapOf<String, Map<Char, Long>>()
+
+    val maps = template.windowed(2)
+        .map { expand(it, 40, converters, shortcuts) }
+        .forEach {
+            counts = merge(counts, it)
+        }
 
     return counts.values.maxOf { it } - counts.values.minOf { it }
 }
 
-fun expand(source: String, step: Int, converters: Map<String, Char>, counts: MutableMap<Char, Long>) {
+fun expand(source: String, step: Int, converters: MutableMap<String, Char>, shortcuts: MutableMap<String, Map<Char, Long>>): Map<Char, Long> {
+    var counts = mutableMapOf<Char, Long>()
+
+    val shortcutKey = "$source-$step"
+    if (shortcuts.contains(shortcutKey)) {
+        return shortcuts[shortcutKey]!!
+    }
 
     val inserted = converters[source]!!
 
@@ -69,9 +81,25 @@ fun expand(source: String, step: Int, converters: Map<String, Char>, counts: Mut
     val next = step - 1
     if (next > 0) {
         val left = source[0].toString() + inserted
-        expand(left, next, converters, counts)
+        counts = merge(counts, expand(left, next, converters, shortcuts))
 
         val right = inserted + source[1].toString()
-        expand(right, next, converters, counts)
+        counts = merge(counts, expand(right, next, converters, shortcuts))
     }
+
+    shortcuts[shortcutKey] = counts
+
+    return counts
+}
+
+fun merge(a: Map<Char, Long>, b: Map<Char, Long>): MutableMap<Char, Long> {
+    val r = mutableMapOf<Char, Long>()
+
+    a.forEach { (k, v) -> r[k] = v }
+    b.forEach { (k, v) ->
+        r.putIfAbsent(k, 0)
+        r.computeIfPresent(k) { _, c -> c + v }
+    }
+
+    return r
 }
