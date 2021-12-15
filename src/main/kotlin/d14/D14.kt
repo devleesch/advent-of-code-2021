@@ -56,7 +56,7 @@ fun part2(lines: List<String>): Any? {
 
     var shortcuts = mutableMapOf<String, Map<Char, Long>>()
 
-    val maps = template.windowed(2)
+    template.windowed(2)
         .map { expand(it, 40, converters, shortcuts) }
         .forEach {
             counts = merge(counts, it)
