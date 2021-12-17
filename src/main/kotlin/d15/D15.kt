@@ -43,6 +43,7 @@ fun part2(lines: List<String>): Any? {
         val position = nexts
             .minByOrNull { it.distance }!!
         visited.add(position)
+
         nexts.addAll(position.nexts(map))
         nexts = nexts.minus(visited).toMutableSet()
 
@@ -83,7 +84,7 @@ fun getRisk(risk: Int, repeat: Int): Int {
     return if (newRisk > 9) newRisk % 9 else newRisk
 }
 
-data class Position(val x: Int, val y: Int, val risk: Int) {
+data class Position(val x: Int, val y: Int, var risk: Int) {
 
     var previous: Position? = null
     var distance: Int = Int.MAX_VALUE
