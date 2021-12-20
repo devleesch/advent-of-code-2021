@@ -1,12 +1,13 @@
 package d20
 
 import readLines
+import kotlin.math.exp
 import kotlin.math.max
 
 fun main() {
     val day = "20"
     println("== Day $day ==")
-    val lines = readLines("src/main/resources/d$day/test1.txt", String::class)
+    val lines = readLines("src/main/resources/d$day/input.txt", String::class)
 
     println("part 1: " + part1(lines))
     println("part 2: " + part2(lines))
@@ -15,6 +16,14 @@ fun main() {
 }
 
 fun part1(lines: List<String>): Any? {
+    return process(lines, 2)
+}
+
+fun part2(lines: List<String>): Any? {
+    return process(lines, 50)
+}
+
+fun process(lines: List<String>, step: Int): Any? {
     val iea = lines[0]
 
     var minX = 0
@@ -32,12 +41,10 @@ fun part1(lines: List<String>): Any? {
         }
     }
 
-    val expand = 10
+    val expand = 2
     var default = '.'
-    for (step in 0 until 2) {
-        var i = 1
-
-        //println(image.size)
+    for (step in 0 until step) {
+        println("step: $step -> size: ${(maxX - minX) * (maxY - minY)}")
 
         minX -= expand
         minY -= expand
@@ -47,11 +54,11 @@ fun part1(lines: List<String>): Any? {
         val newImage = mutableSetOf<Pixel>()
         for (y in minY .. maxY) {
             for (x in minX .. maxX) {
-                var pixel = image.filter { it.x == x }.firstOrNull { it.y == y }
-                if (pixel == null) {
+                var pixel = Pixel(x, y, true)
+                if (!image.contains(pixel)) {
                     pixel = Pixel(x, y, false)
                 }
-                val range = pixel.range(image, minX, maxX, minY, maxY, default)
+                val range = pixel.range(image, minX + expand, maxX - expand, minY + expand, maxY - expand, default)
 
                 val bin = range.map { if (it.light) '1' else '0' }
                 val index = bin.joinToString("").toInt(2)
@@ -61,26 +68,23 @@ fun part1(lines: List<String>): Any? {
                 if (iea[index] == '#') {
                     newImage.add(Pixel(pixel.x, pixel.y, true))
                 }
-
-                i++
             }
         }
 
         image = newImage
-        print(minX, maxX, minY, maxY, image)
+        //print(minX, maxX, minY, maxY, image)
 
-        if (step > 1) {
-            val defaultBin = if (default == '#') 1 else 0
-            val defaultIndex = MutableList(9) { defaultBin }.joinToString("").toInt(2)
-            default = iea[defaultIndex]
-        }
+        minX = image.minOf { it.x }
+        minY = image.minOf { it.y }
+        maxX = image.maxOf { it.x }
+        maxY = image.maxOf { it.y }
+
+        val defaultBin = if (default == '#') 1 else 0
+        val defaultIndex = MutableList(9) { defaultBin }.joinToString("").toInt(2)
+        default = iea[defaultIndex]
     }
 
     return image.size
-}
-
-fun part2(lines: List<String>): Any? {
-    TODO("Not yet implemented")
 }
 
 fun print(minX: Int, maxX: Int, minY: Int, maxY: Int, image: MutableSet<Pixel>) {
@@ -115,4 +119,23 @@ data class Pixel(val x: Int, val y: Int, var light: Boolean) {
         return range
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Pixel
+
+        if (x != other.x) return false
+        if (y != other.y) return false
+        if (light != other.light) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = x
+        result = 31 * result + y
+        result = 31 * result + light.hashCode()
+        return result
+    }
 }
