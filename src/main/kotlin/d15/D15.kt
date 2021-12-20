@@ -36,19 +36,23 @@ fun part2(lines: List<String>): Any? {
     val map = getMap(lines, 5)
 
     val visited = mutableSetOf<Position>()
-    var nexts = mutableSetOf<Position>()
+    val nexts = mutableSetOf<Position>()
     map[0][0].distance = 0
     nexts.add(map[0][0])
     while (!visited.contains(map[map.size - 1][map.size - 1])) {
-        val position = nexts
-            .minByOrNull { it.distance }!!
+        val position = nexts.minByOrNull { it.distance }!!
         visited.add(position)
+        nexts.remove(position)
 
-        nexts.addAll(position.nexts(map))
-        nexts = nexts.minus(visited).toMutableSet()
+        val n = position.nexts(map)
+        n.forEach {
+            if (position.distance + it.risk < it.distance) {
+                it.distance = position.distance + it.risk
+                it.previous = position
+            }
+        }
 
-        position.nexts(map)
-            .forEach { it.distance = min(position.distance + it.risk, it.distance) }
+        nexts.addAll(n.minus(visited))
     }
 
     return map[map.size - 1][map.size - 1].distance
