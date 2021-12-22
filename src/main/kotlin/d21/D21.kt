@@ -6,7 +6,7 @@ import java.lang.Integer.min
 fun main() {
     val day = "21"
     println("== Day $day ==")
-    val lines = readLines("src/main/resources/d$day/input.txt", String::class)
+    val lines = readLines("src/main/resources/d$day/test1.txt", String::class)
 
     println("part 1: " + part1(lines))
     println("part 2: " + part2(lines))
@@ -36,18 +36,50 @@ fun part2(lines: List<String>): Any? {
     val player1 = Player(lines[0].last().digitToInt(), 0)
     val player2 = Player(lines[1].last().digitToInt(), 0)
 
-    val universes = 786316482957123
-
+    val repartition = mutableMapOf<Int, Int>()
     for (i in 3..9) {
         val diceFor = diceFor(i)
-        println("$i => $diceFor = ${diceFor.size}")
+        //println("$i => $diceFor = ${diceFor.size}")
+        repartition[i] = diceFor.size
     }
 
-    val results = mutableListOf<List<Int>>()
-    for (i in 3..9) {
-        results.add(mutableListOf(i))
+    val p1 = mutableListOf<MutableList<Move>>()
+    toWin(mutableListOf(), player1.position, p1)
+
+    val p2 = mutableListOf<MutableList<Move>>()
+    toWin(mutableListOf(), player2.position, p2)
+
+    var previous = System.currentTimeMillis()
+    val wins = mutableListOf<Long>(0, 0)
+    p1.forEachIndexed { ai, a ->
+        for (b in p2) {
+            var p = 0
+            val all = mutableListOf<Move>()
+            if (a.size <= b.size) {
+                p = 0
+                all.addAll(a)
+                all.addAll(b.subList(0, a.size - 1))
+            } else {
+                p = 1
+                all.addAll(b)
+                all.addAll(a.subList(0, b.size))
+            }
+
+            var result = 1L
+            for (v in all) {
+                result *= repartition[v.dice]!!
+            }
+            wins[p] += result
+        }
+
+        if (ai % 1000 == 0) {
+            val current = System.currentTimeMillis()
+            println("$ai / ${p1.size} - ${current - previous}ms")
+            previous = current
+        }
     }
-    val toWin = toWin(0, 4, mutableListOf())
+
+    println("player1: ${wins[0]} - player2: ${wins[1]}")
 
     return -1
 }
@@ -66,14 +98,23 @@ fun diceFor(sum: Int): List<List<Int>> {
     return result
 }
 
-fun toWin(points: Int, position: Int, result: MutableList<MutableList<Int>>): MutableList<MutableList<Int>> {
-    val newResult = mutableListOf<MutableList<Int>>()
-    if (points < 21) {
+fun toWin(result: MutableList<Move>, position: Int, results: MutableList<MutableList<Move>>) {
+    if (result.sumOf { it.position } >= 21) {
+        results.add(result)
+    } else {
         for (i in 3..9) {
-            newResult.addAll(toWin(points + i, position + i))
+            val newResult = result.toMutableList()
+            var position = getPosition(position, i)
+            newResult.add(Move(position, i))
+            toWin(newResult, position, results)
         }
     }
-    return newResult
+}
+
+fun getPosition(start: Int, move: Int): Int {
+    var position = start + move
+    while (position > 10) position -= 10
+    return position
 }
 
 class Player(var position: Int, var points: Int) {
@@ -88,11 +129,11 @@ class Player(var position: Int, var points: Int) {
 
 }
 
-open class Dice(val side: Int) {
+class Dice(val side: Int) {
 
     var turn = 0
 
-    open fun roll(): List<Int> {
+    fun roll(): List<Int> {
         val roll = mutableListOf<Int>()
 
         for (i in 1..3) {
@@ -107,5 +148,9 @@ open class Dice(val side: Int) {
     }
 
 }
+
+data class Move(val position: Int, val dice: Int)
+
+
 
 
