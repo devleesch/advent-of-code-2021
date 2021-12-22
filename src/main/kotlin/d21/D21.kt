@@ -36,20 +36,44 @@ fun part2(lines: List<String>): Any? {
     val player1 = Player(lines[0].last().digitToInt(), 0)
     val player2 = Player(lines[1].last().digitToInt(), 0)
 
-    val score = 21
+    val universes = 786316482957123
 
-    val dice = DiracDice()
-    while(true) {
-        player1.move(dice)
-//        println("player1: ${player1.points}")
-        if (player1.points >= score) break
-
-        player2.move(dice)
-//        println("player2: ${player2.points}")
-        if (player2.points >= score) break
+    for (i in 3..9) {
+        val diceFor = diceFor(i)
+        println("$i => $diceFor = ${diceFor.size}")
     }
 
-    return min(player1.points, player2.points) * dice.turn * 3
+    val results = mutableListOf<List<Int>>()
+    for (i in 3..9) {
+        results.add(mutableListOf(i))
+    }
+    val toWin = toWin(0, 4, mutableListOf())
+
+    return -1
+}
+
+fun diceFor(sum: Int): List<List<Int>> {
+    val result = mutableListOf<List<Int>>()
+    for (a in 1..3) {
+        for (b in 1..3) {
+            for (c in 1..3) {
+                if (a + b + c == sum) {
+                    result.add(listOf(a, b, c))
+                }
+            }
+        }
+    }
+    return result
+}
+
+fun toWin(points: Int, position: Int, result: MutableList<MutableList<Int>>): MutableList<MutableList<Int>> {
+    val newResult = mutableListOf<MutableList<Int>>()
+    if (points < 21) {
+        for (i in 3..9) {
+            newResult.addAll(toWin(points + i, position + i))
+        }
+    }
+    return newResult
 }
 
 class Player(var position: Int, var points: Int) {
@@ -82,13 +106,6 @@ open class Dice(val side: Int) {
         return roll
     }
 
-}
-
-class DiracDice() : Dice(3) {
-    override fun roll(): List<Int> {
-        turn++
-        return listOf(3, 3, 3)
-    }
 }
 
 
