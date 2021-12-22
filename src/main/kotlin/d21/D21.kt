@@ -2,6 +2,7 @@ package d21
 
 import readLines
 import java.lang.Integer.min
+import kotlin.math.pow
 
 fun main() {
     val day = "21"
@@ -51,30 +52,32 @@ fun part2(lines: List<String>): Any? {
 
     var previous = System.currentTimeMillis()
     val wins = mutableListOf<Long>(0, 0)
-    p1.forEachIndexed { ai, a ->
-        for (b in p2) {
-            var p = 0
-            val all = mutableListOf<Move>()
-            if (a.size <= b.size) {
-                p = 0
-                all.addAll(a)
-                all.addAll(b.subList(0, a.size - 1))
-            } else {
-                p = 1
-                all.addAll(b)
-                all.addAll(a.subList(0, b.size))
-            }
-
-            var result = 1L
-            for (v in all) {
-                result *= repartition[v.dice]!!
-            }
-            wins[p] += result
+    p1.forEachIndexed { i, a ->
+        var result = 1L
+        for (move in a) {
+            result *= repartition[move.dice]?.toLong()!!
         }
+        result *= 27.toDouble().pow(a.size - 1).toLong()
+        wins[0] += result
 
-        if (ai % 1000 == 0) {
+        if (i % 1000 == 0) {
             val current = System.currentTimeMillis()
-            println("$ai / ${p1.size} - ${current - previous}ms")
+            println("$i / ${p1.size} - ${current - previous}ms")
+            previous = current
+        }
+    }
+
+    p2.forEachIndexed { i, a ->
+        var result = 1L
+        for (move in a) {
+            result *= repartition[move.dice]?.toLong()!!
+        }
+        result *= 3.toDouble().pow(a.size).toLong()
+        wins[1] += result
+
+        if (i % 1000 == 0) {
+            val current = System.currentTimeMillis()
+            println("$i / ${p2.size} - ${current - previous}ms")
             previous = current
         }
     }
