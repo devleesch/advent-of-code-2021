@@ -42,7 +42,7 @@ fun parse(line: String): List<Cube> {
 
     val cubes = mutableListOf<Cube>()
     find?.let {
-        val on = find.groupValues[1].equals("on")
+        val on = find.groupValues[1] == ("on")
         val x1 = find.groupValues[2].toInt()
         val x2 = find.groupValues[3].toInt()
         val y1 = find.groupValues[4].toInt()
@@ -70,4 +70,55 @@ class Cube(val x: Int, val y: Int, val z: Int, val state: Boolean){
     fun key(): String {
         return "$x;$y;$z"
     }
+}
+
+class Interval(val start: Int, val end: Int) {
+
+    fun apply(other: Interval): List<Interval> {
+        val intervals = mutableListOf<Interval>()
+
+        // other start inside this but finish outside
+        if (other.start >= this.start && other.start <= this.end && other.end >= this.end) {
+            intervals.add(Interval(this.start, other.end))
+        }
+        // other start outside this but end inside this
+        else if (other.start <= this.start && other.end >= this.start && other.end <= this.end) {
+            intervals.add(Interval(other.start, this.end))
+        }
+        // other start before and end after this
+        else if(other.start <= this.start && other.end >= this.end) {
+            intervals.add(Interval(other.start, other.end))
+        }
+        // this start before and end after other
+        else if (this.start <= this.start && this.end >= other.end) {
+            intervals.add(Interval(this.start, this.end))
+        }
+        // no common part
+        else {
+            intervals.add(Interval(this.start, this.end))
+            intervals.add(Interval(other.start, other.end))
+        }
+
+        return intervals
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Interval
+
+        if (start != other.start) return false
+        if (end != other.end) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = start
+        result = 31 * result + end
+        return result
+    }
+
+
 }
