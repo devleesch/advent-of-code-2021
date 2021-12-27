@@ -1,6 +1,7 @@
 package d19
 
 import readLines
+import kotlin.math.abs
 
 
 fun main() {
@@ -8,46 +9,65 @@ fun main() {
     println("== Day $day ==")
     val lines = readLines("src/main/resources/d$day/input.txt", String::class)
 
-    println("part 1: " + part1(lines))
-    println("part 2: " + part2(lines))
+    resolve(lines)
 
     println("============")
 }
 
-fun part1(lines: List<String>): Any? {
+fun resolve(lines: List<String>) {
     val scanners = parse(lines).toMutableList()
 
+    val pScanners = mutableSetOf<Scanner>()
     val scanner0 = scanners.first()
     scanner0.oriented = scanner0.orientations.first().toMutableSet()
     scanners.remove(scanner0)
+    pScanners.add(scanner0)
 
     while (scanners.isNotEmpty()) {
+        println("${scanners.size} -> $scanners")
         val toRemoves = mutableSetOf<Scanner>()
         for (scanner in scanners) {
+            val toAdd = mutableSetOf<Beacon>()
             for (orientation in scanner.orientations) {
                 for (beacon in orientation) {
                     val relatives = orientation.map { it.relativeTo(beacon) }
-                    val toAdd = mutableSetOf<Beacon>()
                     for (beacon0 in scanner0.oriented!!) {
                         val relatives0 = scanner0.oriented!!.map { it.relativeTo(beacon0) }
-                        if (relatives.intersect(relatives0).size >= 12) {
-                            println("$scanner overlap")
+                        if (relatives.intersect(relatives0.toSet()).size >= 12) {
                             toAdd.addAll(relatives.map { it.relativeTo(beacon0) })
                             toRemoves.add(scanner)
+                            scanner.x = beacon0.x - beacon.x
+                            scanner.y = beacon0.y - beacon.y
+                            scanner.z = beacon0.z - beacon.z
+                            break
                         }
                     }
-                    scanner0.oriented!!.addAll(toAdd)
+                    if (toAdd.size > 0) {
+                        break
+                    }
+                }
+                if (toAdd.size > 0) {
+                    break
                 }
             }
+            scanner0.oriented!!.addAll(toAdd)
+            pScanners.add(scanner)
         }
         scanners.removeAll(toRemoves)
     }
 
-    return scanner0.oriented!!.size
-}
+    println("part1: ${scanner0.oriented!!.size}")
 
-fun part2(lines: List<String>): Any? {
-    TODO("Not yet implemented")
+    var maxDistance = Int.MIN_VALUE
+    for (a in pScanners) {
+        for (b in pScanners) {
+            val distance = a.distance(b)
+            if (distance > maxDistance) {
+                maxDistance = distance
+            }
+        }
+    }
+    println("part2: $maxDistance")
 }
 
 fun parse(lines: List<String>): List<Scanner> {
@@ -75,6 +95,9 @@ fun parse(lines: List<String>): List<Scanner> {
 class Scanner(val index: Int, beacons: Set<Beacon>) {
     val orientations = mutableSetOf<Set<Beacon>>()
     var oriented: MutableSet<Beacon>? = null
+    var x: Int = 0
+    var y: Int = 0
+    var z: Int = 0
 
     init {
         this.orientations.addAll(this.rotate(beacons))
@@ -108,6 +131,10 @@ class Scanner(val index: Int, beacons: Set<Beacon>) {
 
     fun rotateZ(beacons: Set<Beacon>): Set<Beacon> {
         return beacons.map { Beacon(it.y, -it.x, it.z) }.toSet()
+    }
+
+    fun distance(other: Scanner): Int {
+        return abs(x - other.x) + abs(y - other.y )+ abs(z - other.z)
     }
 
     override fun toString(): String {
