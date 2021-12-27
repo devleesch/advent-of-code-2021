@@ -15,9 +15,35 @@ fun main() {
 }
 
 fun part1(lines: List<String>): Any? {
-    val scanners = parse(lines)
+    val scanners = parse(lines).toMutableList()
 
-    return -1
+    val scanner0 = scanners.first()
+    scanner0.oriented = scanner0.orientations.first().toMutableSet()
+    scanners.remove(scanner0)
+
+    while (scanners.isNotEmpty()) {
+        val toRemoves = mutableSetOf<Scanner>()
+        for (scanner in scanners) {
+            for (orientation in scanner.orientations) {
+                for (beacon in orientation) {
+                    val relatives = orientation.map { it.relativeTo(beacon) }
+                    val toAdd = mutableSetOf<Beacon>()
+                    for (beacon0 in scanner0.oriented!!) {
+                        val relatives0 = scanner0.oriented!!.map { it.relativeTo(beacon0) }
+                        if (relatives.intersect(relatives0).size >= 12) {
+                            println("$scanner overlap")
+                            toAdd.addAll(relatives.map { it.relativeTo(beacon0) })
+                            toRemoves.add(scanner)
+                        }
+                    }
+                    scanner0.oriented!!.addAll(toAdd)
+                }
+            }
+        }
+        scanners.removeAll(toRemoves)
+    }
+
+    return scanner0.oriented!!.size
 }
 
 fun part2(lines: List<String>): Any? {
@@ -29,10 +55,10 @@ fun parse(lines: List<String>): List<Scanner> {
 
     val regex = "--- scanner ([0-9]+) ---".toRegex()
     var index = -1
-    var beacons = mutableListOf<Beacon>()
+    var beacons = mutableSetOf<Beacon>()
     lines.forEach { line ->
         if (regex.matches(line)) {
-            beacons = mutableListOf()
+            beacons = mutableSetOf()
             index = regex.find(line)?.groups?.get(1)?.value?.toInt()!!
         } else if(line.isEmpty()) {
             scanners.add(Scanner(index, beacons))
@@ -46,40 +72,74 @@ fun parse(lines: List<String>): List<Scanner> {
     return scanners
 }
 
-class Scanner(val index: Int, beacons: List<Beacon>) {
-    val beacons = mutableListOf<List<Beacon>>()
-    var orientedBeacons: List<Beacon>? = null
+class Scanner(val index: Int, beacons: Set<Beacon>) {
+    val orientations = mutableSetOf<Set<Beacon>>()
+    var oriented: MutableSet<Beacon>? = null
 
     init {
-        this.beacons.addAll(this.rotate(beacons))
+        this.orientations.addAll(this.rotate(beacons))
     }
 
-    fun rotate(beacons: List<Beacon>): List<List<Beacon>> {
-        val rotations = mutableListOf<MutableList<Beacon>>()
-        for (p in listOf("xy", "yz", "xz")) {
-            for (x in listOf(-1, 1)) {
-                for (y in listOf(-1, 1)) {
-                    for (z in listOf(-1, 1)) {
-                        println("$p -> $x;$y;$z")
-                        val rotation = mutableListOf<Beacon>()
-                        for (beacon in beacons) {
-                            when (p) {
-                                "xy" -> rotation.add(Beacon(beacon.y * y, beacon.x * x, beacon.z * z))
-                                "yz" -> rotation.add(Beacon(beacon.x * x, beacon.z * z, beacon.y * y))
-                                "xz" -> rotation.add(Beacon(beacon.z * z, beacon.y * y, beacon.x * x))
-                                else -> throw Exception("unknow rotation")
-                            }
-                        }
-                        rotations.add(rotation)
-                    }
+    fun rotate(beacons: Set<Beacon>): Set<Set<Beacon>> {
+        val rotations = mutableSetOf<Set<Beacon>>()
+
+        var current = beacons
+        for (x in 0 until 4) {
+            for (y in 0 until 4) {
+                for (z in 0 until 4) {
+                    rotations.add(current)
+                    current = rotateZ(current)
                 }
+                current = rotateY(current)
             }
+            current = rotateX(current)
         }
+
         return rotations
     }
+
+    fun rotateX(beacons: Set<Beacon>): Set<Beacon> {
+        return beacons.map { Beacon(it.x, it.z, -it.y) }.toSet()
+    }
+
+    fun rotateY(beacons: Set<Beacon>): Set<Beacon> {
+        return beacons.map { Beacon(it.z, it.y, -it.x) }.toSet()
+    }
+
+    fun rotateZ(beacons: Set<Beacon>): Set<Beacon> {
+        return beacons.map { Beacon(it.y, -it.x, it.z) }.toSet()
+    }
+
+    override fun toString(): String {
+        return "Scanner(index=$index)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Scanner
+
+        if (index != other.index) return false
+        if (orientations != other.orientations) return false
+        if (oriented != other.oriented) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return index
+    }
+
+
 }
 
-class Beacon(val x: Int, val y: Int, val z: Int) {
+data class Beacon(val x: Int, val y: Int, val z: Int) {
+
+    fun relativeTo(other: Beacon): Beacon {
+        return Beacon(other.x - x, other.y - y, other.z - z)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

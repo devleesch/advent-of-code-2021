@@ -5,7 +5,7 @@ import readLines
 fun main() {
     val day = "24"
     println("== Day $day ==")
-    val lines = readLines("src/main/resources/d$day/input.txt", String::class)
+    val lines = readLines("src/main/resources/d$day/part14.txt", String::class)
 
     println("part 1: " + part1(lines))
     println("part 2: " + part2(lines))
@@ -14,18 +14,37 @@ fun main() {
 }
 
 fun part1(lines: List<String>): Any? {
-
-    val input = 91661111111111
-
-    val alu = Alu(input)
-    lines.forEach { alu.exec(it) }
-    println("$input -> ${alu.vars}")
-
+    re(14, 0, mutableListOf(), mutableMapOf())
     return -1
 }
 
 fun part2(lines: List<String>): Any? {
     TODO("Not yet implemented")
+}
+
+fun re(part: Int, expected: Long, possibility: MutableList<Int>, memory: MutableMap<String, Long>) {
+    val lines = readLines("src/main/resources/d24/part${part}.txt", String::class)
+    for (z in 0..99) {
+        for (input in 1L..9L) {
+            val value = memory.computeIfAbsent("$part-$z-$input") {
+                val alu = Alu(input)
+                alu.vars['z'] = z.toLong()
+                lines.forEach { alu.exec(it) }
+                alu.vars['z']!!
+            }
+
+            if (expected == value) {
+                //possibility.add(input.toInt())
+                //println("part = $part, i = $input, z = $z -> $value")
+                if (part > 1) {
+                    re(part - 1, z.toLong(), possibility, memory)
+                } else {
+                    println("found")
+                    //println(possibility)
+                }
+            }
+        }
+    }
 }
 
 fun generate(value: Long, index: Int): List<Long> {
@@ -70,7 +89,7 @@ class Alu(inputs: Long) {
             "mod" -> mod(v1, v2)
             "eql" -> eql(v1, v2)
         }
-        println("$save -> $line = $vars")
+        //println("$save -> $line = $vars")
     }
 
     private fun eql(v1: Char, v2: Long) {
@@ -99,8 +118,8 @@ class Alu(inputs: Long) {
     }
 
     fun inp(name: Char) {
-        println()
-        println("$inputs -> $vars")
+//        println()
+//        println("$inputs -> $vars")
         val first = inputs.removeFirst()
 //        println("$name = $first")
         vars[name] = first
