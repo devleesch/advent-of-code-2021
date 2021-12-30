@@ -6,7 +6,7 @@ import java.lang.Integer.min
 fun main() {
     val day = "21"
     println("== Day $day ==")
-    val lines = readLines("src/main/resources/d$day/test1.txt", String::class)
+    val lines = readLines("src/main/resources/d$day/input.txt", String::class)
 
     println("part 1: " + part1(lines))
     println("part 2: " + part2(lines))
@@ -40,9 +40,52 @@ fun part2(lines: List<String>): Any? {
     for (i in 3..9) {
         possibilities.addAll(diceFor(i))
     }
-    val groupBy = possibilities.groupBy { it.sum() }
+    val matrix = possibilities.groupBy { it.sum() }
 
-    return -1
+    val scores = mutableMapOf(
+        1 to 0L,
+        2 to 0L
+    )
+    play(player1, player2, mutableListOf(), scores, matrix)
+
+    return scores.maxOf { it.value }
+}
+
+fun play(player1: Player, player2: Player, dices: MutableList<Int>, scores: MutableMap<Int, Long>, matrix: Map<Int, List<List<Int>>>){
+    for (d1 in 3..9) {
+        val copyDices = dices.toMutableList()
+        copyDices.add(d1)
+
+        val copyPlayer1 = player1.copy()
+        copyPlayer1.move(d1)
+        if (copyPlayer1.points < 21) {
+            for (d2 in 3..9) {
+                val copyDices2 = copyDices.toMutableList()
+                copyDices2.add(d2)
+
+                val copyPlayer2 = player2.copy()
+                copyPlayer2.move(d2)
+                if (copyPlayer2.points < 21) {
+                    play(copyPlayer1, copyPlayer2, copyDices2, scores, matrix)
+                } else {
+                    scores[2] = scores[2]!! + nbWins(copyDices2, matrix)
+                }
+            }
+        } else {
+            scores[1] = scores[1]!! + nbWins(copyDices, matrix)
+        }
+    }
+}
+
+fun nbWins(dices: List<Int>, matrix: Map<Int, List<List<Int>>>): Long {
+    var wins = 1L
+    for (dice in dices) {
+        wins *= matrix[dice]!!.size
+    }
+    return wins
+    /*return dices.map { matrix[it]!!.size }
+        .reduce { acc, size -> acc * size }
+        .toLong()*/
 }
 
 fun diceFor(sum: Int): List<List<Int>> {
@@ -67,6 +110,20 @@ class Player(var position: Int, var points: Int) {
         points += position
     }
 
+    fun move(dice: Int) {
+        position += dice
+        while (position > 10) position -= 10
+        points += position
+    }
+
+    fun copy(): Player {
+        return Player(position, points)
+    }
+
+    override fun toString(): String {
+        return "Player(position=$position, points=$points)"
+    }
+
 }
 
 open class Dice(private val side: Int) {
@@ -88,14 +145,6 @@ open class Dice(private val side: Int) {
         turn++
 
         return roll.sum()
-    }
-
-}
-
-class DiracDice : Dice(3) {
-
-    override fun roll(): Int {
-        return 0
     }
 
 }
