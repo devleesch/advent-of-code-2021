@@ -17,24 +17,37 @@ fun main() {
 fun part1(lines: List<String>): Any? {
     //loop(mutableListOf(), lines)
 
-    re(14, 0, mutableListOf(), mutableMapOf())
-
-
-    /*for (z in 0..999999) {
-        for (i in 1..9) {
-            val alu = Alu(i.toLong())
-            alu.vars['z'] = z.toLong()
-            val lines = readLines("src/main/resources/d24/part14.txt", String::class)
-            for (line in lines) {
-                alu.exec(line)
-            }
-            //println("$z -> ${alu.vars}")
-            if (alu.vars['z'] == 0L) {
-                println("$z -> $i")
-            }
-
+    val alu = Alu(11111111111111)
+    var i = 0
+    lines.forEach {
+        if (it.startsWith("inp")) {
+            println("$i -> ${alu.vars}")
+            i++
         }
-    }*/
+        alu.exec(it)
+    }
+
+    println("$i -> ${alu.vars}")
+
+    val solutions = mutableListOf<List<Match>>()
+    re(14, 0, mutableListOf(), mutableMapOf(), solutions)
+    println("solutions: $solutions")
+
+    /*
+    val lines = readLines("src/main/resources/d24/part6.txt", String::class)
+    for (z in 0..9999999) {
+        for (w in 1..9) {
+            val alu = Alu(w.toLong())
+            alu.vars['z'] = z.toLong()
+            lines.forEach {
+                alu.exec(it)
+            }
+            if (alu.vars['z'] == 163L) {
+                println("$z;$w -> ${alu.vars}")
+            }
+        }
+    }
+    */
 
     return -1
 }
@@ -71,40 +84,36 @@ fun toLong(list: List<Int>): Long {
     return result
 }
 
-fun re(part: Int, expected: Long, possibility: List<Long>, memory: MutableMap<String, Long>) {
-    println("-> $part - ${possibility.reversed()}")
+fun re(part: Int, expected: Long, possibility: List<Match>, memory: MutableMap<String, List<Match>>, solutions: MutableList<List<Match>>) {
     if (possibility.size == 14) {
         println("$possibility")
+        solutions.add(possibility)
     } else {
         val lines = readLines("src/main/resources/d24/part${part}.txt", String::class)
 
-        var stop = false
-        val max = mutableMapOf<Long, Long>()
-        for (z in 0..99999L) {
-            for (input in 1L..9L) {
-                val alu = Alu(input)
-                alu.vars['z'] = z
-                for (line in lines) {
-                    alu.exec(line)
-                }
-                val value = alu.vars['z']!!
+        memory.computeIfAbsent("$part-$expected") {
+            val matches = mutableListOf<Match>()
+            for (z in 0..999999L) {
+                for (input in 1L..9L) {
+                    val alu = Alu(input)
+                    alu.vars['z'] = z
+                    for (line in lines) {
+                        alu.exec(line)
+                    }
 
-                if (value == expected) {
-                    max.computeIfAbsent(input) { z }
-                    if (input == 9L) {
-                        stop = true
+                    if (alu.vars['z'] == expected) {
+                        matches.add(Match(input, z))
                     }
                 }
             }
-            if (stop) {
-                break
-            }
+            matches
         }
 
-        val maxOf = max.maxOf { entry -> entry.key }
-        re(part - 1, max[maxOf]!!, possibility.plus(maxOf), memory)
+        memory["$part-$expected"]?.forEach {
+            println("part: $part - match: $it - memory.size: ${memory.size}")
+            re(part - 1, it.z, possibility.plus(it), memory, solutions)
+        }
     }
-    //println("<- $part")
 }
 
 fun generate(value: Long, index: Int): List<Long> {
@@ -137,7 +146,7 @@ class Alu(inputs: Long) {
 
         var v2 = -1L
         if (split.size == 3) {
-            v2 = if (split[2].toLongOrNull() == null) vars[split[2][0]]!! else split[2].toLongOrNull()!!
+            v2 = if (split[2].toLongOrNull() == null) vars[split[2][0]]!! else split[2].toLong()
         }
 
         when (split[0]) {
@@ -184,3 +193,5 @@ class Alu(inputs: Long) {
         vars[name] = first
     }
 }
+
+data class Match(val w: Long, val z: Long)
