@@ -17,21 +17,25 @@ fun main() {
 fun part1(lines: List<String>): Any? {
     //loop(mutableListOf(), lines)
 
-    val alu = Alu(11111111111111)
-    var i = 0
-    lines.forEach {
-        if (it.startsWith("inp")) {
-            println("$i -> ${alu.vars}")
-            i++
-        }
-        alu.exec(it)
-    }
+//    val alu = Alu(11111111111111)
+//    var i = 0
+//    lines.forEach {
+//        if (it.startsWith("inp")) {
+//            println("$i -> ${alu.vars}")
+//            i++
+//        }
+//        alu.exec(it)
+//    }
+//
+//    println("$i -> ${alu.vars}")
 
-    println("$i -> ${alu.vars}")
-
-    val solutions = mutableListOf<List<Match>>()
+    val solutions = mutableListOf<Long>()
     re(14, 0, mutableListOf(), mutableMapOf(), solutions)
-    println("solutions: $solutions")
+
+    solutions.sorted()
+    println(solutions[0])
+    println(solutions[solutions.size-1])
+
 
     /*
     val lines = readLines("src/main/resources/d24/part6.txt", String::class)
@@ -84,34 +88,39 @@ fun toLong(list: List<Int>): Long {
     return result
 }
 
-fun re(part: Int, expected: Long, possibility: List<Match>, memory: MutableMap<String, List<Match>>, solutions: MutableList<List<Match>>) {
+fun re(part: Int, expected: Long, possibility: List<Match>, memory: MutableMap<Int, MutableMap<Long, MutableList<Alu>>>, solutions: MutableList<Long>) {
     if (possibility.size == 14) {
         println("$possibility")
-        solutions.add(possibility)
+        var value = ""
+        possibility.reversed()
+            .map { it.w }
+            .forEach {
+                value += it
+            }
+        solutions.add(value.toLong())
     } else {
-        val lines = readLines("src/main/resources/d24/part${part}.txt", String::class)
-
-        memory.computeIfAbsent("$part-$expected") {
-            val matches = mutableListOf<Match>()
-            for (z in 0..999999L) {
+        if(!memory.containsKey(part)) {
+            memory[part] = mutableMapOf()
+            for (z in 0..200000L) {
                 for (input in 1L..9L) {
                     val alu = Alu(input)
+                    alu.oZ = z
                     alu.vars['z'] = z
-                    for (line in lines) {
-                        alu.exec(line)
-                    }
+                    alu.exec(part)
 
-                    if (alu.vars['z'] == expected) {
-                        matches.add(Match(input, z))
+                    if (!memory[part]!!.containsKey(alu.vars['z'])) {
+                        memory[part]!![alu.vars['z']!!] = mutableListOf()
                     }
+                    memory[part]!![alu.vars['z']!!]!!.add(alu)
                 }
             }
-            matches
         }
 
-        memory["$part-$expected"]?.forEach {
-            println("part: $part - match: $it - memory.size: ${memory.size}")
-            re(part - 1, it.z, possibility.plus(it), memory, solutions)
+        if (memory[part]!!.containsKey(expected)) {
+            memory[part]!![expected]!!.forEach {
+                println("part: $part - alu: $it - memory.size: ${memory.size}")
+                re(part - 1, it.oZ, possibility.plus(Match(it.vars['w']!!, it.oZ)), memory, solutions)
+            }
         }
     }
 }
@@ -127,10 +136,17 @@ fun generate(value: Long, index: Int): List<Long> {
 
 class Alu(inputs: Long) {
 
+    var oZ: Long = -1
     private var inputs: MutableList<Long> = mutableListOf()
 
     init {
         this.inputs = inputs.toString().map { it.digitToInt().toLong() }.toMutableList()
+    }
+
+    companion object {
+        private val divZ = mutableListOf(1, 1, 1, 26, 1, 1, 26, 1, 26, 1, 26, 26, 26, 26)
+        private val addX = mutableListOf(12, 13, 12, -13, 11, 15, -14, 12, -8, 14, -9, -11, -6, -5)
+        private val addY = mutableListOf(1, 9, 11, 6, 6, 13, 13, 5, 7, 2, 10, 14, 7, 1)
     }
 
     var vars = mutableMapOf(
@@ -158,6 +174,27 @@ class Alu(inputs: Long) {
             "eql" -> eql(v1, v2)
         }
         //println("$line = $vars")
+    }
+
+    fun exec(part: Int) {
+        inp('w')
+        mul('x', 0)
+        add('x', vars['z']!!)
+        mod('x', 26)
+        div('z', divZ[part - 1].toLong())
+        add('x', addX[part - 1].toLong())
+        eql('x', vars['w']!!)
+        eql('x', 0)
+        mul('y', 0)
+        add('y', 25)
+        mul('y', vars['x']!!)
+        add('y', 1)
+        mul('z', vars['y']!!)
+        mul('y', 0)
+        add('y', vars['w']!!)
+        add('y', addY[part - 1].toLong())
+        mul('y', vars['x']!!)
+        add('z', vars['y']!!)
     }
 
     private fun eql(v1: Char, v2: Long) {
@@ -192,6 +229,11 @@ class Alu(inputs: Long) {
 //        println("$name = $first")
         vars[name] = first
     }
+
+    override fun toString(): String {
+        return "Alu(oZ=$oZ, inputs=$inputs, vars=$vars)"
+    }
+
 }
 
 data class Match(val w: Long, val z: Long)
